@@ -20,6 +20,9 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+
+import net.jcip.annotations.NotThreadSafe;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,6 +63,7 @@ import static uk.ac.ebi.eva.pipeline.jobs.steps.AnnotationLoaderStep.LOAD_VEP_AN
 @IntegrationTest
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { JobOptions.class, AnnotationJob.class, AnnotationConfiguration.class, JobLauncherTestUtils.class})
+@NotThreadSafe
 public class AnnotationJobTest {
 
     @Autowired

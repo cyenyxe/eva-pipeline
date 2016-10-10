@@ -33,6 +33,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import net.jcip.annotations.NotThreadSafe;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.pipeline.configuration.VariantAggregatedConfig;
 import uk.ac.ebi.eva.test.utils.JobTestUtils;
@@ -57,6 +59,7 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.getTransformedOutputPath;
 @IntegrationTest
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {JobOptions.class, AggregatedVcfJob.class, VariantAggregatedConfig.class})
+@NotThreadSafe
 public class AggregatedVcfJobTest {
 
     @Autowired

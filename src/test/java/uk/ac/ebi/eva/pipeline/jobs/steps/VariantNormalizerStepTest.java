@@ -29,6 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import net.jcip.annotations.NotThreadSafe;
 import uk.ac.ebi.eva.pipeline.configuration.GenotypedVcfConfiguration;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.pipeline.jobs.CommonJobStepInitialization;
@@ -55,6 +57,7 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.getTransformedOutputPath;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = {GenotypedVcfJob.class, JobOptions.class, GenotypedVcfConfiguration.class})
+@NotThreadSafe
 public class VariantNormalizerStepTest extends CommonJobStepInitialization {
 
     private JobLauncherTestUtils jobLauncherTestUtils;

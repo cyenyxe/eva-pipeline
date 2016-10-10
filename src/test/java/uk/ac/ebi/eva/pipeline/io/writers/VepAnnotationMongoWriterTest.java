@@ -17,6 +17,8 @@ package uk.ac.ebi.eva.pipeline.io.writers;
 
 import com.mongodb.*;
 
+import net.jcip.annotations.NotThreadSafe;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,6 +49,7 @@ import static uk.ac.ebi.eva.test.data.VepOutputContent.vepOutputContent;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { AnnotationJob.class, AnnotationConfiguration.class})
+@NotThreadSafe
 public class VepAnnotationMongoWriterTest {
 
     @Autowired

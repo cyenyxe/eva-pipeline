@@ -34,6 +34,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import net.jcip.annotations.NotThreadSafe;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.pipeline.configuration.GenotypedVcfWorkflowConfiguration;
 import uk.ac.ebi.eva.pipeline.jobs.steps.VepAnnotationGeneratorStep;
@@ -55,6 +57,7 @@ import static org.junit.Assert.*;
 @IntegrationTest
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { JobOptions.class, GenotypedVcfJob.class, GenotypedVcfWorkflowConfiguration.class})
+@NotThreadSafe
 public class GenotypedVcfJobWorkflowTest {
 
     private JobLauncherTestUtils jobLauncherTestUtils;
