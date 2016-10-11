@@ -46,7 +46,6 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.restoreMongoDbFromDump;
 public class PopulationStatisticsLoaderStepTest {
 
     private static final String SMALL_VCF_FILE = "/small20.vcf.gz";
-    private static final String STATS_DB = "VariantStatsConfigurationTest_vl"; //this name should be the same of the dump DB in /dump
 
     @Autowired
     private JobLauncherTestUtils jobLauncherTestUtils;
@@ -67,15 +66,12 @@ public class PopulationStatisticsLoaderStepTest {
         String input = PopulationStatisticsLoaderStepTest.class.getResource(SMALL_VCF_FILE).getFile();
         VariantSource source = new VariantSource(input, "1", "1", "studyName");
 
-        String dbName = STATS_DB;
-
         pipelineOptions.put("input.vcf", input);
-        variantOptions.put(VariantStorageManager.DB_NAME, dbName);
         variantOptions.put(VariantStorageManager.VARIANT_SOURCE, source);
 
         //and a valid variants load and stats create steps already completed
-        String dump = PopulationStatisticsLoaderStepTest.class.getResource("/dump/").getFile();
-        restoreMongoDbFromDump(dump, getClass().getSimpleName());
+        String dump = PopulationStatisticsLoaderStepTest.class.getResource("/dump/VariantStatsConfigurationTest_vl").getFile();
+        restoreMongoDbFromDump(dump, jobOptions.getDbName());
 
         String outputDir = pipelineOptions.getString("output.dir.statistics");
 
@@ -106,7 +102,7 @@ public class PopulationStatisticsLoaderStepTest {
 
         // The DB docs should have the field "st"
         VariantStorageManager variantStorageManager = StorageManagerFactory.getVariantStorageManager();
-        VariantDBAdaptor variantDBAdaptor = variantStorageManager.getDBAdaptor(dbName, null);
+        VariantDBAdaptor variantDBAdaptor = variantStorageManager.getDBAdaptor(jobOptions.getDbName(), null);
         VariantDBIterator iterator = variantDBAdaptor.iterator(new QueryOptions());
         assertEquals(1, iterator.next().getSourceEntries().values().iterator().next().getCohortStats().size());
 
@@ -121,7 +117,7 @@ public class PopulationStatisticsLoaderStepTest {
         VariantSource source = new VariantSource(input, "4", "1", "studyName");
 
         pipelineOptions.put("input.vcf", input);
-        variantOptions.put(VariantStorageManager.DB_NAME, STATS_DB);
+        variantOptions.put(VariantStorageManager.DB_NAME, jobOptions.getDbName());
         variantOptions.put(VariantStorageManager.VARIANT_SOURCE, source);
 
         JobExecution jobExecution = jobLauncherTestUtils.launchStep(PopulationStatisticsFlow.LOAD_STATISTICS);
@@ -135,11 +131,12 @@ public class PopulationStatisticsLoaderStepTest {
         jobOptions.loadArgs();
         pipelineOptions = jobOptions.getPipelineOptions();
         variantOptions = jobOptions.getVariantOptions();
+        jobOptions.setDbName(getClass().getSimpleName());
     }
 
     @After
     public void tearDown() throws Exception {
-        JobTestUtils.cleanDBs(STATS_DB);
+        JobTestUtils.cleanDBs(jobOptions.getDbName());
     }
 
 }
