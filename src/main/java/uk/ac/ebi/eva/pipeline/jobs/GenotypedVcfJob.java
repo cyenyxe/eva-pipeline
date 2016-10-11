@@ -15,6 +15,8 @@
  */
 package uk.ac.ebi.eva.pipeline.jobs;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -27,12 +29,14 @@ import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
+import uk.ac.ebi.eva.pipeline.jobs.flows.AnnotationFlow;
+import uk.ac.ebi.eva.pipeline.jobs.flows.PopulationStatisticsFlow;
 import uk.ac.ebi.eva.pipeline.jobs.steps.VariantLoaderStep;
-
-import javax.annotation.PostConstruct;
 
 /**
  *  Complete pipeline workflow:
@@ -45,7 +49,7 @@ import javax.annotation.PostConstruct;
  */
 @Configuration
 @EnableBatchProcessing
-@Import({AnnotationJob.class, PopulationStatisticsJob.class, VariantLoaderStep.class})
+@Import({VariantLoaderStep.class, PopulationStatisticsFlow.class, AnnotationFlow.class})
 public class GenotypedVcfJob extends CommonJobStepInitialization{
     private static final Logger logger = LoggerFactory.getLogger(GenotypedVcfJob.class);
 
