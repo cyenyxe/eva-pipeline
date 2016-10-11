@@ -19,6 +19,9 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+
+import net.jcip.annotations.NotThreadSafe;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,6 +57,7 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.restoreMongoDbFromDump;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { AnnotationJob.class, AnnotationConfiguration.class, JobLauncherTestUtils.class})
+@NotThreadSafe
 public class AnnotationLoaderStepTest {
 
     @Autowired

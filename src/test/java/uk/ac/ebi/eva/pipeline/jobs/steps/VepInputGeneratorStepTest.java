@@ -17,6 +17,8 @@ package uk.ac.ebi.eva.pipeline.jobs.steps;
 
 
 import junit.framework.TestCase;
+import net.jcip.annotations.NotThreadSafe;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +47,7 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.readFirstLine;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { AnnotationJob.class, AnnotationConfiguration.class, JobLauncherTestUtils.class})
+@NotThreadSafe
 public class VepInputGeneratorStepTest {
 
     private static final String VARIANTS_ANNOT_GENERATE_VEP_INPUT_DB_NAME = "VariantStatsConfigurationTest_vl";

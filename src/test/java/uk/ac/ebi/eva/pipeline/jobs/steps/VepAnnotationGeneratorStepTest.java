@@ -16,6 +16,8 @@
 package uk.ac.ebi.eva.pipeline.jobs.steps;
 
 import junit.framework.TestCase;
+import net.jcip.annotations.NotThreadSafe;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,6 +50,7 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.makeGzipFile;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { JobOptions.class, AnnotationJob.class, AnnotationConfiguration.class, JobLauncherTestUtils.class})
+@NotThreadSafe
 public class VepAnnotationGeneratorStepTest {
 
     @Autowired
