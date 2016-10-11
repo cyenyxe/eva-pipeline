@@ -65,14 +65,14 @@ public class VepAnnotationMongoWriter extends MongoItemWriter<VariantAnnotation>
     private DBObjectToVariantAnnotationConverter converter;
 
     public VepAnnotationMongoWriter(MongoOperations mongoOperations) {
-        this.mongoOperations = mongoOperations;
         this.converter = new DBObjectToVariantAnnotationConverter();
+        this.mongoOperations = mongoOperations;
+        setTemplate(mongoOperations);
     }
 
     public VepAnnotationMongoWriter(MongoOperations mongoOperations, String collection){
         this(mongoOperations);
         setCollection(collection);
-        setTemplate(mongoOperations);
     }
 
     @Override

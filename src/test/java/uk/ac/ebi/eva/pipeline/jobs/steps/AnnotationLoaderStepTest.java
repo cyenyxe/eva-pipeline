@@ -15,12 +15,10 @@
  */
 package uk.ac.ebi.eva.pipeline.jobs.steps;
 
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
-
-import net.jcip.annotations.NotThreadSafe;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+import static uk.ac.ebi.eva.test.utils.JobTestUtils.makeGzipFile;
+import static uk.ac.ebi.eva.test.utils.JobTestUtils.restoreMongoDbFromDump;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -32,20 +30,24 @@ import org.opencb.opencga.storage.mongodb.variant.DBObjectToVariantAnnotationCon
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+
+import net.jcip.annotations.NotThreadSafe;
 import uk.ac.ebi.eva.pipeline.configuration.AnnotationConfiguration;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.pipeline.jobs.AnnotationJob;
 import uk.ac.ebi.eva.test.data.VepOutputContent;
 import uk.ac.ebi.eva.test.utils.JobTestUtils;
-
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
-import static uk.ac.ebi.eva.test.utils.JobTestUtils.makeGzipFile;
-import static uk.ac.ebi.eva.test.utils.JobTestUtils.restoreMongoDbFromDump;
 
 
 /**
@@ -62,16 +64,25 @@ public class AnnotationLoaderStepTest {
 
     @Autowired
     private JobLauncherTestUtils jobLauncherTestUtils;
-    @Autowired
-    private JobOptions jobOptions;
+
+    private JobParameters jobParameters;
 
     private String dbName;
     private MongoClient mongoClient;
 
     @Before
     public void setUp() throws Exception {
-        jobOptions.loadArgs();
-        dbName = jobOptions.getDbName();
+        jobParameters = new JobParametersBuilder()
+                .addString("db.name", this.getClass().getSimpleName())
+                .addString("db.collections.variants.name", "variants")
+                .addString("config.db.hosts", "localhost:27017")
+                .addString("config.db.authentication-db", "")
+                .addString("config.db.user", "")
+                .addString("config.db.password", "")
+                .addString("config.db.read-preference", "primary")
+                .addString("vep.output", "/tmp/7_5_vep_annotation.tsv.gz")
+                .toJobParameters();
+        dbName = jobParameters.getString("db.name");
         mongoClient = new MongoClient();
     }
 
@@ -79,19 +90,18 @@ public class AnnotationLoaderStepTest {
     public void shouldLoadAllAnnotations() throws Exception {
         DBObjectToVariantAnnotationConverter converter = new DBObjectToVariantAnnotationConverter();
 
-        String dump = AnnotationLoaderStepTest.class.getResource("/dump/").getFile();
-        restoreMongoDbFromDump(dump);
+        String dump = AnnotationLoaderStepTest.class.getResource("/dump/VariantStatsConfigurationTest_vl/").getFile();
+        restoreMongoDbFromDump(dump, dbName);
 
-        String vepOutput = jobOptions.getVepOutput();
-        makeGzipFile(VepOutputContent.vepOutputContent, vepOutput);
+        makeGzipFile(VepOutputContent.vepOutputContent, jobParameters.getString("vep.output"));
 
-        JobExecution jobExecution = jobLauncherTestUtils.launchStep(AnnotationLoaderStep.LOAD_VEP_ANNOTATION);
+        JobExecution jobExecution = jobLauncherTestUtils.launchStep(AnnotationLoaderStep.LOAD_VEP_ANNOTATION, jobParameters);
 
         assertEquals(ExitStatus.COMPLETED, jobExecution.getExitStatus());
         assertEquals(BatchStatus.COMPLETED, jobExecution.getStatus());
 
         //check that documents have the annotation
-        DBCursor cursor = collection(dbName, jobOptions.getDbCollectionsVariantsName()).find();
+        DBCursor cursor = collection(jobParameters.getString("db.name"), jobParameters.getString("db.collections.variants.name")).find();
 
         int cnt=0;
         int consequenceTypeCount = 0;

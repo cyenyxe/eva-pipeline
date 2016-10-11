@@ -125,8 +125,16 @@ public class JobTestUtils {
 
     public static void restoreMongoDbFromDump(String dumpLocation) throws IOException, InterruptedException {
         logger.info("restoring DB from " + dumpLocation);
+        restoreDump("mongorestore " + dumpLocation);
+    }
 
-        Process exec = Runtime.getRuntime().exec("mongorestore " + dumpLocation);
+    public static void restoreMongoDbFromDump(String dumpLocation, String database) throws IOException, InterruptedException {
+        logger.info("restoring DB from " + dumpLocation + " into " + database);
+        restoreDump("mongorestore -d " + database + " " + dumpLocation);
+    }
+
+    private static void restoreDump(String command) throws IOException, InterruptedException  {
+        Process exec = Runtime.getRuntime().exec(command);
         exec.waitFor();
         String line;
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
