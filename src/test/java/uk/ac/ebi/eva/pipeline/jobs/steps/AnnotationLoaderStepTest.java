@@ -36,7 +36,7 @@ import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import uk.ac.ebi.eva.pipeline.configuration.AnnotationConfiguration;
+import uk.ac.ebi.eva.pipeline.configuration.AnnotationLoaderStepConfiguration;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.pipeline.jobs.AnnotationJob;
 import uk.ac.ebi.eva.test.data.VepOutputContent;
@@ -56,7 +56,7 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.restoreMongoDbFromDump;
  * to run properly.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { AnnotationJob.class, AnnotationConfiguration.class, JobLauncherTestUtils.class})
+@ContextConfiguration(classes = { AnnotationJob.class, AnnotationLoaderStepConfiguration.class, JobLauncherTestUtils.class})
 @NotThreadSafe
 public class AnnotationLoaderStepTest {
 
@@ -70,7 +70,6 @@ public class AnnotationLoaderStepTest {
     @Before
     public void setUp() throws Exception {
         jobOptions.loadArgs();
-        jobOptions.setDbName(getClass().getSimpleName());
         mongoClient = new MongoClient();
     }
 
