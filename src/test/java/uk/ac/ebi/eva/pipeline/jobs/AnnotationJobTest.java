@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import uk.ac.ebi.eva.pipeline.configuration.AnnotationConfiguration;
+import uk.ac.ebi.eva.pipeline.configuration.AnnotationJobConfiguration;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.test.utils.JobTestUtils;
 
@@ -61,7 +61,7 @@ import static uk.ac.ebi.eva.pipeline.jobs.steps.AnnotationLoaderStep.LOAD_VEP_AN
  */
 @IntegrationTest
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { JobOptions.class, AnnotationJob.class, AnnotationConfiguration.class, JobLauncherTestUtils.class})
+@ContextConfiguration(classes = { JobOptions.class, AnnotationJob.class, AnnotationJobConfiguration.class, JobLauncherTestUtils.class})
 @NotThreadSafe
 public class AnnotationJobTest {
 
@@ -143,7 +143,6 @@ public class AnnotationJobTest {
     @Before
     public void setUp() throws Exception {
         jobOptions.loadArgs();
-        jobOptions.setDbName(getClass().getSimpleName());
         vepInputFile = new File(jobOptions.getVepInput());
 
         File vepPathFile = new File(AnnotationJobTest.class.getResource("/mockvep.pl").getFile());
