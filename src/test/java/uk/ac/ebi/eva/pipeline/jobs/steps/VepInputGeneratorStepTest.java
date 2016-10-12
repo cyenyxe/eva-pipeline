@@ -31,7 +31,7 @@ import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import uk.ac.ebi.eva.pipeline.configuration.AnnotationConfiguration;
+import uk.ac.ebi.eva.pipeline.configuration.VepInputGeneratorStepConfiguration;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.pipeline.jobs.AnnotationJob;
 import uk.ac.ebi.eva.pipeline.jobs.PopulationStatisticsJobTest;
@@ -47,7 +47,7 @@ import static uk.ac.ebi.eva.test.utils.JobTestUtils.readFirstLine;
  * Test {@link VepInputGeneratorStep}
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { AnnotationJob.class, AnnotationConfiguration.class, JobLauncherTestUtils.class})
+@ContextConfiguration(classes = { AnnotationJob.class, VepInputGeneratorStepConfiguration.class, JobLauncherTestUtils.class})
 @NotThreadSafe
 public class VepInputGeneratorStepTest {
 
@@ -59,7 +59,6 @@ public class VepInputGeneratorStepTest {
     @Before
     public void setUp() throws Exception {
         jobOptions.loadArgs();
-        jobOptions.setDbName(getClass().getSimpleName());
     }
     
     @After
