@@ -15,6 +15,8 @@
  */
 package uk.ac.ebi.eva.pipeline.jobs.steps;
 
+import java.net.URI;
+
 import org.opencb.biodata.models.variant.VariantSource;
 import org.opencb.datastore.core.ObjectMap;
 import org.opencb.datastore.core.QueryOptions;
@@ -34,9 +36,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
+import uk.ac.ebi.eva.pipeline.configuration.OpencgaJobOptions;
 import uk.ac.ebi.eva.utils.URLHelper;
-
-import java.net.URI;
 
 /**
  *
@@ -51,30 +52,33 @@ import java.net.URI;
  */
 @Component
 @StepScope
-@Import({JobOptions.class})
+@Import({JobOptions.class, OpencgaJobOptions.class})
 public class PopulationStatisticsGeneratorStep implements Tasklet {
     private static final Logger logger = LoggerFactory.getLogger(PopulationStatisticsGeneratorStep.class);
 
     @Autowired
     private JobOptions jobOptions;
 
+    @Autowired
+    private OpencgaJobOptions opencgaJobOptions;
+    
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        ObjectMap variantOptions = jobOptions.getVariantOptions();
+        ObjectMap opencgaOptions = opencgaJobOptions.getOptions();
         ObjectMap pipelineOptions = jobOptions.getPipelineOptions();
 
 //                HashMap<String, Set<String>> samples = new HashMap<>(); // TODO fill properly. if this is null overwrite will take on
 //                samples.put("SOME", new HashSet<>(Arrays.asList("HG00096", "HG00097")));
 
         VariantStorageManager variantStorageManager = StorageManagerFactory.getVariantStorageManager();
-        VariantSource variantSource = variantOptions.get(VariantStorageManager.VARIANT_SOURCE, VariantSource.class);
+        VariantSource variantSource = opencgaOptions.get(VariantStorageManager.VARIANT_SOURCE, VariantSource.class);
         VariantDBAdaptor dbAdaptor = variantStorageManager.getDBAdaptor(
-                variantOptions.getString(VariantStorageManager.DB_NAME), variantOptions);
+                opencgaOptions.getString(VariantStorageManager.DB_NAME), opencgaOptions);
         URI outdirUri = URLHelper.createUri(pipelineOptions.getString("output.dir.statistics"));
         URI statsOutputUri = outdirUri.resolve(VariantStorageManager.buildFilename(variantSource));
 
         VariantStatisticsManager variantStatisticsManager = new VariantStatisticsManager();
-        QueryOptions statsOptions = new QueryOptions(variantOptions);
+        QueryOptions statsOptions = new QueryOptions(opencgaOptions);
 
         // actual stats creation
         variantStatisticsManager.createStats(dbAdaptor, statsOutputUri, null, statsOptions);    // TODO allow subset of samples

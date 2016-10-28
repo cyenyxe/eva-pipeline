@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
 import uk.ac.ebi.eva.pipeline.configuration.GenotypedVcfGenericJobOptions;
-import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
+import uk.ac.ebi.eva.pipeline.configuration.OpencgaJobOptions;
 import uk.ac.ebi.eva.utils.URLHelper;
 
 /**
@@ -49,14 +49,14 @@ import uk.ac.ebi.eva.utils.URLHelper;
  * Output: transformed variants JSON file (variants.json.gz)
  */
 @Component
-@Import({JobOptions.class, GenotypedVcfGenericJobOptions.class})
+@Import({GenotypedVcfGenericJobOptions.class, OpencgaJobOptions.class})
 public class VariantNormalizerStep implements Tasklet {
 
     private static final Logger logger = LoggerFactory.getLogger(VariantNormalizerStep.class);
 
     @Autowired
-    private JobOptions jobOptions;
-
+    private OpencgaJobOptions opencgaJobOptions;
+    
     @Autowired
     private GenotypedVcfGenericJobOptions vcfJobOptions;
 
@@ -71,7 +71,7 @@ public class VariantNormalizerStep implements Tasklet {
         logger.info("Normalizing file {} into folder {}", inputFilePath.toString(), outputDirectoryPath.toString());
 
         VariantStorageManager variantStorageManager = StorageManagerFactory.getVariantStorageManager();
-        variantStorageManager.transform(inputFilePath.toUri(), pedigreeUri, outputDirectoryPath.toUri(), jobOptions.getVariantOptions());
+        variantStorageManager.transform(inputFilePath.toUri(), pedigreeUri, outputDirectoryPath.toUri(), opencgaJobOptions.getOptions());
         return RepeatStatus.FINISHED;
     }
 

@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
+import uk.ac.ebi.eva.pipeline.configuration.OpencgaJobOptions;
 import uk.ac.ebi.eva.utils.URLHelper;
 
 import java.net.URI;
@@ -80,16 +81,19 @@ import java.net.URI;
  */
 @Component
 @StepScope
-@Import({JobOptions.class})
+@Import({JobOptions.class, OpencgaJobOptions.class})
 public class PopulationStatisticsLoaderStep implements Tasklet {
     private static final Logger logger = LoggerFactory.getLogger(PopulationStatisticsLoaderStep.class);
 
     @Autowired
     private JobOptions jobOptions;
 
+    @Autowired
+    private OpencgaJobOptions opencgaJobOptions;
+    
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        ObjectMap variantOptions = jobOptions.getVariantOptions();
+        ObjectMap variantOptions = opencgaJobOptions.getOptions();
         ObjectMap pipelineOptions = jobOptions.getPipelineOptions();
 
         VariantStorageManager variantStorageManager = StorageManagerFactory.getVariantStorageManager();

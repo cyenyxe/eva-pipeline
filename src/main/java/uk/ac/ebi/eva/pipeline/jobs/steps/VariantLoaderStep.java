@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 import uk.ac.ebi.eva.pipeline.configuration.GenotypedVcfGenericJobOptions;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
+import uk.ac.ebi.eva.pipeline.configuration.OpencgaJobOptions;
 
 /**
  *
@@ -43,13 +44,14 @@ import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
  * Output: variants loaded into mongodb
  */
 @Component
-@Import({JobOptions.class, GenotypedVcfGenericJobOptions.class})
+@Import({GenotypedVcfGenericJobOptions.class, OpencgaJobOptions.class})
 public class VariantLoaderStep implements Tasklet {
+
     private static final Logger logger = LoggerFactory.getLogger(VariantLoaderStep.class);
 
     @Autowired
-    private JobOptions jobOptions;
-
+    private OpencgaJobOptions opencgaJobOptions;
+    
     @Autowired
     private GenotypedVcfGenericJobOptions vcfJobOptions;
 
@@ -58,13 +60,13 @@ public class VariantLoaderStep implements Tasklet {
         Path inputFilePath = vcfJobOptions.getFilePath();
         Path outputDirectoryPath = vcfJobOptions.getOutputDirectory();
 
-        Path outputVariantJsonFile = outputDirectoryPath.resolve(inputFilePath.getFileName().toString() + ".variants.json" + jobOptions.getCompressExtension());
+        Path outputVariantJsonFile = outputDirectoryPath.resolve(inputFilePath.getFileName().toString() + ".variants.json" + JobOptions.compressExtension);
         URI transformedVariantsUri = outputDirectoryPath.toUri().resolve(outputVariantJsonFile.getFileName().toString());
 
         logger.info("Loading variants from file {}", inputFilePath.toUri());
 
         VariantStorageManager variantStorageManager = StorageManagerFactory.getVariantStorageManager();
-        variantStorageManager.load(transformedVariantsUri, jobOptions.getVariantOptions());
+        variantStorageManager.load(transformedVariantsUri, opencgaJobOptions.getOptions());
 
         return RepeatStatus.FINISHED;
     }

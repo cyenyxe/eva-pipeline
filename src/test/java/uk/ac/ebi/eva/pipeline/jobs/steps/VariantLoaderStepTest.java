@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.opencb.datastore.core.QueryOptions;
 import org.opencb.opencga.lib.common.Config;
@@ -49,7 +50,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import uk.ac.ebi.eva.pipeline.configuration.GenotypedVcfConfiguration;
-import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.pipeline.jobs.GenotypedVcfJob;
 import uk.ac.ebi.eva.test.utils.JobTestUtils;
 
@@ -59,41 +59,40 @@ import uk.ac.ebi.eva.test.utils.JobTestUtils;
  * Test for {@link VariantLoaderStep}
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {GenotypedVcfJob.class, JobOptions.class, GenotypedVcfConfiguration.class, JobLauncherTestUtils.class})
+@ContextConfiguration(classes = {GenotypedVcfJob.class, GenotypedVcfConfiguration.class, JobLauncherTestUtils.class})
 public class VariantLoaderStepTest {
 
     @Autowired
     private JobLauncherTestUtils jobLauncherTestUtils;
 
-    @Autowired
-    private JobOptions jobOptions;
-
     private String dbName;
 
     @Rule
     public TemporaryFolder outputFolder = new TemporaryFolder();
-    
+
+    @Rule
+    public TestName name = new TestName();
+
     private static String opencgaHome = System.getenv("OPENCGA_HOME") != null ? System.getenv("OPENCGA_HOME") : "/opt/opencga";
 
     @Test
     public void loaderStepShouldLoadAllVariants() throws Exception {
         final String inputFilePath = "/loading/small20.vcf.gz";
-        String inputFile = VariantNormalizerStepTest.class.getResource(inputFilePath).getFile();
+        String inputFile = this.getClass().getResource(inputFilePath).getFile();
         Config.setOpenCGAHome(opencgaHome);
 
         //and a variants transform step already executed
-        File transformedVcfVariantsFile =
-                new File(VariantLoaderStepTest.class.getResource("/loading/small20.vcf.gz.variants.json.gz").getFile());
+        File transformedVcfVariantsFile = new File(this.getClass().getResource("/loading/small20.vcf.gz.variants.json.gz").getFile());
         FileUtils.copyFileToDirectory(transformedVcfVariantsFile, outputFolder.getRoot());
 
-        File transformedVariantsFile =
-                new File(VariantLoaderStepTest.class.getResource("/loading/small20.vcf.gz.file.json.gz").getFile());
+        File transformedVariantsFile = new File(this.getClass().getResource("/loading/small20.vcf.gz.file.json.gz").getFile());
         FileUtils.copyFileToDirectory(transformedVariantsFile, outputFolder.getRoot());
 
         // When the execute method in variantsLoad is executed
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("input.vcf", inputFile)
                 .addString("output.dir", outputFolder.getRoot().getCanonicalPath())
+                .addString("db.name", dbName)
                 .toJobParameters();
         JobExecution jobExecution = jobLauncherTestUtils.launchStep(GenotypedVcfJob.LOAD_VARIANTS, jobParameters);
 
@@ -107,13 +106,13 @@ public class VariantLoaderStepTest {
         VariantDBIterator iterator = variantDBAdaptor.iterator(new QueryOptions());
         long lines = getLines(new GZIPInputStream(new FileInputStream(transformedVcfVariantsFile)));
 
-        assertEquals(count(iterator), lines);
+        assertEquals(lines, count(iterator));
     }
 
     @Test
     public void loaderStepShouldFailBecauseOpenCGAHomeIsWrong() throws JobExecutionException, IOException {
         final String inputFilePath = "/loading/small20.vcf.gz";
-        String inputFile = VariantNormalizerStepTest.class.getResource(inputFilePath).getFile();
+        String inputFile = this.getClass().getResource(inputFilePath).getFile();
 
         Config.setOpenCGAHome("");
 
@@ -129,8 +128,7 @@ public class VariantLoaderStepTest {
 
     @Before
     public void setUp() throws Exception {
-        jobOptions.loadArgs();
-        dbName = jobOptions.getPipelineOptions().getString("db.name");
+	dbName = name.getMethodName();
     }
 
     @After
