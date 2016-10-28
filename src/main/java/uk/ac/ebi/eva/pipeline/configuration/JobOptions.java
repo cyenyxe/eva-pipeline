@@ -68,7 +68,7 @@ public class JobOptions {
     // Input
     @Value("${input.vcf}") private String input;
     @Value("${input.vcf.id}") private String fileId;
-    @Value("${input.vcf.aggregation}") private String aggregated;
+    @Value("${input.vcf.aggregation}") private String aggregated = "NONE"; // TODO Must be mandatory for aggregated job
     @Value("${input.study.type}") private String studyType;
     @Value("${input.study.name}") private String studyName;
     @Value("${input.study.id}") private String studyId;

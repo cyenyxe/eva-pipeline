@@ -39,6 +39,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.opencb.biodata.models.variant.Variant;
 import org.opencb.biodata.models.variant.VariantSource;
@@ -95,13 +96,16 @@ public class GenotypedVcfJobTest {
     @Rule
     public TemporaryFolder outputFolder = new TemporaryFolder();
     
+    @Rule
+    public TestName name = new TestName();
+
     private static String opencgaHome = System.getenv("OPENCGA_HOME") != null ? System.getenv("OPENCGA_HOME") : "/opt/opencga";
 
     @Test
     public void fullGenotypedVcfJob() throws Exception {
         final String inputFilePath = "/job-genotyped/small20.vcf.gz";
-        String inputFile = GenotypedVcfJobTest.class.getResource(inputFilePath).getFile();
-        String mockVep = GenotypedVcfJobTest.class.getResource("/mockvep.pl").getFile();
+        String inputFile = this.getClass().getResource(inputFilePath).getFile();
+        String mockVep = this.getClass().getResource("/mockvep.pl").getFile();
 
         jobOptions.getPipelineOptions().put("output.dir", outputFolder.getRoot().getCanonicalPath());
         jobOptions.getPipelineOptions().put("output.dir.statistics", outputFolder.getRoot().getCanonicalPath());
@@ -122,7 +126,11 @@ public class GenotypedVcfJobTest {
         // Run the Job
         JobParameters jobParameters = new JobParametersBuilder()
                 .addString("input.vcf", inputFile)
-                .addString("output.dir", outputFolder.getRoot().getCanonicalPath())
+                .addString("input.vcf.id", name.getMethodName()) 
+                .addString("input.study.type", "COLLECTION") 
+                .addString("input.study.name", this.getClass().getSimpleName())
+                .addString("input.study.id", this.getClass().getSimpleName())
+	        .addString("output.dir", outputFolder.getRoot().getCanonicalPath())
                 .toJobParameters();
         JobExecution jobExecution = jobLauncherTestUtils.launchJob(jobParameters);
 
@@ -158,7 +166,7 @@ public class GenotypedVcfJobTest {
         // 5 annotation flow
         // annotation input vep generate step
         BufferedReader testReader = new BufferedReader(new InputStreamReader(new FileInputStream(
-                GenotypedVcfJobTest.class.getResource("/preannot.sorted").getFile())));
+                this.getClass().getResource("/preannot.sorted").getFile())));
         BufferedReader actualReader = new BufferedReader(new InputStreamReader(new FileInputStream(
                 vepInputFile.toString())));
 

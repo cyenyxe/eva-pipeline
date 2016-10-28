@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.opencb.opencga.lib.common.Config;
 import org.springframework.batch.core.ExitStatus;
@@ -81,11 +82,14 @@ public class GenotypedVcfJobWorkflowTest {
     @Rule
     public TemporaryFolder outputFolder = new TemporaryFolder();
 
+    @Rule
+    public TestName name = new TestName();
+
     private static String opencgaHome = System.getenv("OPENCGA_HOME") != null ? System.getenv("OPENCGA_HOME") : "/opt/opencga";
 
     @Test
     public void allStepsShouldBeExecuted() throws Exception {
-        JobParameters jobParameters = initVariantConfigurationJob();
+        JobParameters jobParameters = initVariantConfigurationJob(name.getMethodName());
 
         JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters);
 
@@ -128,7 +132,7 @@ public class GenotypedVcfJobWorkflowTest {
 
     @Test
     public void optionalStepsShouldBeSkipped() throws Exception {
-        JobParameters jobParameters = initVariantConfigurationJob();
+        JobParameters jobParameters = initVariantConfigurationJob(name.getMethodName());
         jobOptions.getPipelineOptions().put(AnnotationFlow.SKIP_ANNOT, true);
         jobOptions.getPipelineOptions().put(PopulationStatisticsFlow.SKIP_STATS, true);
 
@@ -149,7 +153,7 @@ public class GenotypedVcfJobWorkflowTest {
 
     @Test
     public void statsStepsShouldBeSkipped() throws Exception {
-        JobParameters jobParameters = initVariantConfigurationJob();
+        JobParameters jobParameters = initVariantConfigurationJob(name.getMethodName());
         jobOptions.getPipelineOptions().put(PopulationStatisticsFlow.SKIP_STATS, true);
         jobOptions.getPipelineOptions().put("db.name", "statsStepsShouldBeSkipped");
 
@@ -189,7 +193,7 @@ public class GenotypedVcfJobWorkflowTest {
 
     @Test
     public void annotationStepsShouldBeSkipped() throws Exception {
-        JobParameters jobParameters = initVariantConfigurationJob();
+        JobParameters jobParameters = initVariantConfigurationJob(name.getMethodName());
         jobOptions.getPipelineOptions().put(AnnotationFlow.SKIP_ANNOT, true);
 
         JobExecution execution = jobLauncherTestUtils.launchJob(jobParameters);
@@ -243,7 +247,7 @@ public class GenotypedVcfJobWorkflowTest {
         JobTestUtils.cleanDBs(dbName);
     }
 
-    private JobParameters initVariantConfigurationJob() throws IOException {
+    private JobParameters initVariantConfigurationJob(String testName) throws IOException {
         final String inputFilePath = "/job-genotyped/small20.vcf.gz";
         String inputFile = GenotypedVcfJobWorkflowTest.class.getResource(inputFilePath).getFile();
         String mockVep = GenotypedVcfJobWorkflowTest.class.getResource("/mockvep.pl").getFile();
@@ -266,6 +270,10 @@ public class GenotypedVcfJobWorkflowTest {
 
         return new JobParametersBuilder()
                 .addString("input.vcf", inputFile)
+                .addString("input.vcf.id", testName) 
+                .addString("input.study.type", "COLLECTION") 
+                .addString("input.study.name", this.getClass().getSimpleName())
+                .addString("input.study.id", this.getClass().getSimpleName())
                 .addString("output.dir", outputFolder.getRoot().getCanonicalPath())
                 .toJobParameters();
     }
