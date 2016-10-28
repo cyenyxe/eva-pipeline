@@ -16,6 +16,7 @@
 package uk.ac.ebi.eva.pipeline.jobs.steps;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.opencb.opencga.storage.core.StorageManagerFactory;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
+import uk.ac.ebi.eva.pipeline.configuration.GenotypedVcfGenericJobOptions;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
 import uk.ac.ebi.eva.utils.URLHelper;
 
@@ -47,7 +49,7 @@ import uk.ac.ebi.eva.utils.URLHelper;
  * Output: transformed variants JSON file (variants.json.gz)
  */
 @Component
-@Import({JobOptions.class})
+@Import({JobOptions.class, GenotypedVcfGenericJobOptions.class})
 public class VariantNormalizerStep implements Tasklet {
 
     private static final Logger logger = LoggerFactory.getLogger(VariantNormalizerStep.class);
@@ -55,18 +57,21 @@ public class VariantNormalizerStep implements Tasklet {
     @Autowired
     private JobOptions jobOptions;
 
+    @Autowired
+    private GenotypedVcfGenericJobOptions vcfJobOptions;
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
         Map<String, Object> jobParameters = chunkContext.getStepContext().getJobParameters();
 
-        URI outdirUri = URLHelper.createUri(String.valueOf(jobParameters.get("output.dir")));
-        URI inputFileUri = URLHelper.createUri(String.valueOf(jobParameters.get("input.vcf")));
+        Path inputFilePath = vcfJobOptions.getFilePath();
+        Path outputDirectoryPath = vcfJobOptions.getOutputDirectory();
         URI pedigreeUri = jobParameters.get("input.pedigree") != null ? URLHelper.createUri(String.valueOf(jobParameters.get("input.pedigree"))) : null;
 
-        logger.info("Normalizing file {} into folder {}", inputFileUri.toString(), outdirUri.toString());
+        logger.info("Normalizing file {} into folder {}", inputFilePath.toString(), outputDirectoryPath.toString());
 
         VariantStorageManager variantStorageManager = StorageManagerFactory.getVariantStorageManager();
-        variantStorageManager.transform(inputFileUri, pedigreeUri, outdirUri, jobOptions.getVariantOptions());
+        variantStorageManager.transform(inputFilePath.toUri(), pedigreeUri, outputDirectoryPath.toUri(), jobOptions.getVariantOptions());
         return RepeatStatus.FINISHED;
     }
 
