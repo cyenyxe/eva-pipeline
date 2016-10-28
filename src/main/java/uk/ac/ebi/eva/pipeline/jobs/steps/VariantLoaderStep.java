@@ -15,6 +15,9 @@
  */
 package uk.ac.ebi.eva.pipeline.jobs.steps;
 
+import java.net.URI;
+import java.nio.file.Path;
+
 import org.opencb.opencga.storage.core.StorageManagerFactory;
 import org.opencb.opencga.storage.core.variant.VariantStorageManager;
 import org.slf4j.Logger;
@@ -27,13 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.stereotype.Component;
 
+import uk.ac.ebi.eva.pipeline.configuration.GenotypedVcfGenericJobOptions;
 import uk.ac.ebi.eva.pipeline.configuration.JobOptions;
-import uk.ac.ebi.eva.utils.URLHelper;
-
-import java.net.URI;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
 
 /**
  *
@@ -45,27 +43,27 @@ import java.util.Map;
  * Output: variants loaded into mongodb
  */
 @Component
-@Import({JobOptions.class})
+@Import({JobOptions.class, GenotypedVcfGenericJobOptions.class})
 public class VariantLoaderStep implements Tasklet {
     private static final Logger logger = LoggerFactory.getLogger(VariantLoaderStep.class);
 
     @Autowired
     private JobOptions jobOptions;
 
+    @Autowired
+    private GenotypedVcfGenericJobOptions vcfJobOptions;
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
-        Map<String, Object> jobParameters = chunkContext.getStepContext().getJobParameters();
+        Path inputFilePath = vcfJobOptions.getFilePath();
+        Path outputDirectoryPath = vcfJobOptions.getOutputDirectory();
+
+        Path outputVariantJsonFile = outputDirectoryPath.resolve(inputFilePath.getFileName().toString() + ".variants.json" + jobOptions.getCompressExtension());
+        URI transformedVariantsUri = outputDirectoryPath.toUri().resolve(outputVariantJsonFile.getFileName().toString());
+
+        logger.info("Loading variants from file {}", inputFilePath.toUri());
 
         VariantStorageManager variantStorageManager = StorageManagerFactory.getVariantStorageManager();
-        URI outdirUri = URLHelper.createUri(String.valueOf(jobParameters.get("output.dir")));
-        URI inputFileUri = URLHelper.createUri(String.valueOf(jobParameters.get("input.vcf")));
-
-        Path input = Paths.get(inputFileUri.getPath());
-        Path output = Paths.get(outdirUri.getPath());
-        Path outputVariantJsonFile = output.resolve(input.getFileName().toString() + ".variants.json" + jobOptions.getCompressExtension());
-        URI transformedVariantsUri = outdirUri.resolve(outputVariantJsonFile.getFileName().toString());
-
-        logger.info("Loading variants from file {}", inputFileUri);
         variantStorageManager.load(transformedVariantsUri, jobOptions.getVariantOptions());
 
         return RepeatStatus.FINISHED;
