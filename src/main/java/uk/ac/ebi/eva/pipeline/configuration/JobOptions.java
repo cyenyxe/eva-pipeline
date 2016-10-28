@@ -65,6 +65,9 @@ public class JobOptions {
     private static final String VEP_OUTPUT = "vep.output";
     private static final String APP_VEP_PATH = "app.vep.path";
 
+    public static final String defaultAggregation = "NONE";
+    public static final String defaultStudyType = "COLLECTION";
+    
     // Input
     @Value("${input.vcf}") private String input;
     @Value("${input.vcf.id}") private String fileId;
@@ -85,9 +88,9 @@ public class JobOptions {
     @Value("${app.opencga.path}") private String opencgaAppHome;
     
     //// OpenCGA options with default values (non-customizable)
-    private String compressExtension = ".gz";
-    private boolean annotate = false;
-    private VariantStorageManager.IncludeSrc includeSourceLine = VariantStorageManager.IncludeSrc.FIRST_8_COLUMNS;
+    public static final String compressExtension = ".gz";
+    public static final boolean annotate = false;
+    public static final VariantStorageManager.IncludeSrc includeSourceLine = VariantStorageManager.IncludeSrc.FIRST_8_COLUMNS;
 
     /// DB connection (most parameters read from OpenCGA "conf" folder)
     @Value("${config.db.hosts:#{null}}") private String dbHosts;

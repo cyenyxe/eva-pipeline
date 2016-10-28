@@ -27,15 +27,19 @@ import java.nio.file.Paths;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.opencb.biodata.models.variant.VariantSource;
 import org.opencb.biodata.models.variant.VariantStudy;
-import org.opencb.datastore.core.ObjectMap;
 import org.opencb.opencga.storage.core.variant.VariantStorageManager;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -49,6 +53,7 @@ import uk.ac.ebi.eva.test.utils.JobTestUtils;
 
 /**
  * @author Diego Poggioli
+ * @author Cristina Yenyxe Gonzalez Garcia
  *
  * Test for {@link PopulationStatisticsGeneratorStep}
  */
@@ -56,45 +61,52 @@ import uk.ac.ebi.eva.test.utils.JobTestUtils;
 @ContextConfiguration(classes = {JobOptions.class, PopulationStatisticsJob.class, CommonConfiguration.class, JobLauncherTestUtils.class})
 public class PopulationStatisticsGeneratorStepTest {
 
-    private static final String SMALL_VCF_FILE = "/small20.vcf.gz";
-
     @Autowired
     private JobLauncherTestUtils jobLauncherTestUtils;
+    
     @Autowired
     private JobOptions jobOptions;
 
-    private ObjectMap variantOptions;
-    private ObjectMap pipelineOptions;
-    private File statsFile;
+    private String dbName;
+
+    @Rule
+    public TemporaryFolder outputFolder = new TemporaryFolder();
+
+    @Rule
+    public TestName name = new TestName();
 
     @Test
     public void statisticsGeneratorStepShouldCalculateStats() throws IOException, InterruptedException {
-        //and a valid variants load step already completed
+	final String inputFile = "/small20.vcf.gz";
+	final String fileId = "1";
+	final String studyId = "1";
         String dump = PopulationStatisticsGeneratorStepTest.class.getResource("/dump/VariantStatsConfigurationTest_vl").getFile();
-        restoreMongoDbFromDump(dump, jobOptions.getDbName());
-
-        //Given a valid VCF input file
-        String input = SMALL_VCF_FILE;
-
-        pipelineOptions.put("input.vcf", input);
+        restoreMongoDbFromDump(dump, dbName);
 
         VariantSource source = new VariantSource(
-                input,
-                "1",
-                "1",
-                "studyName",
+                inputFile,
+                fileId,
+                studyId,
+                this.getClass().getSimpleName(),
                 VariantStudy.StudyType.COLLECTION,
                 VariantSource.Aggregation.NONE);
 
-        variantOptions.put(VARIANT_SOURCE, source);
+        jobOptions.getVariantOptions().put(VARIANT_SOURCE, source);
 
-        statsFile = new File(Paths.get(pipelineOptions.getString("output.dir.statistics")).resolve(VariantStorageManager.buildFilename(source))
+        File statsFile = new File(Paths.get(outputFolder.getRoot().getAbsolutePath()).resolve(VariantStorageManager.buildFilename(source))
                 + ".variants.stats.json.gz");
-        statsFile.delete();
         assertFalse(statsFile.exists());  // ensure the stats file doesn't exist from previous executions
 
         // When the execute method in variantsStatsCreate is executed
-        JobExecution jobExecution = jobLauncherTestUtils.launchStep(PopulationStatisticsFlow.CALCULATE_STATISTICS);
+        JobParameters jobParameters = new JobParametersBuilder()
+        	.addString("input.vcf", inputFile)
+        	.addString("input.vcf.id", fileId)
+        	.addString("input.study.type", "COLLECTION")
+        	.addString("input.study.name", this.getClass().getSimpleName())
+        	.addString("input.study.id", studyId)
+        	.addString("db.name", dbName)
+        	.toJobParameters();
+        JobExecution jobExecution = jobLauncherTestUtils.launchStep(PopulationStatisticsFlow.CALCULATE_STATISTICS, jobParameters);
 
         //Then variantsStatsCreate step should complete correctly
         assertEquals(ExitStatus.COMPLETED, jobExecution.getExitStatus());
@@ -102,12 +114,6 @@ public class PopulationStatisticsGeneratorStepTest {
 
         //and the file containing statistics should exist
         assertTrue(statsFile.exists());
-
-        //delete created files
-        statsFile.delete();
-        new File(Paths.get(pipelineOptions.getString("output.dir.statistics")).resolve(VariantStorageManager.buildFilename(source))
-                + ".source.stats.json.gz").delete();
-
     }
 
     /**
@@ -116,42 +122,43 @@ public class PopulationStatisticsGeneratorStepTest {
      */
     @Test
     public void statisticsGeneratorStepShouldFailIfVariantLoadStepIsNotCompleted() throws Exception {
-        //Given a valid VCF input file
-        String input = SMALL_VCF_FILE;
-
-        pipelineOptions.put("input.vcf", input);
+	final String inputFile = "/small20.vcf.gz";
+	final String fileId = "1";
+	final String studyId = "1";
 
         VariantSource source = new VariantSource(
-                input,
-                "1",
-                "1",
+                inputFile,
+                fileId,
+                studyId,
                 "studyName",
                 VariantStudy.StudyType.COLLECTION,
                 VariantSource.Aggregation.NONE);
 
-        variantOptions.put(VARIANT_SOURCE, source);
-
-        statsFile = new File(Paths.get(pipelineOptions.getString("output.dir.statistics")).resolve(VariantStorageManager.buildFilename(source))
-                + ".variants.stats.json.gz");
-        statsFile.delete();
-        assertFalse(statsFile.exists());  // ensure the stats file doesn't exist from previous executions
+        jobOptions.getVariantOptions().put(VARIANT_SOURCE, source);
 
         // When the execute method in variantsStatsCreate is executed
-        JobExecution jobExecution = jobLauncherTestUtils.launchStep(PopulationStatisticsFlow.CALCULATE_STATISTICS);
+        JobParameters jobParameters = new JobParametersBuilder()
+        	.addString("input.vcf", inputFile)
+        	.addString("input.vcf.id", fileId)
+        	.addString("input.study.type", "COLLECTION")
+        	.addString("input.study.name", this.getClass().getSimpleName())
+        	.addString("input.study.id", studyId)
+        	.addString("db.name", dbName)
+        	.toJobParameters();
+        JobExecution jobExecution = jobLauncherTestUtils.launchStep(PopulationStatisticsFlow.CALCULATE_STATISTICS, jobParameters);
         assertEquals(ExitStatus.FAILED.getExitCode(), jobExecution.getExitStatus().getExitCode());
     }
 
     @Before
     public void setUp() throws Exception {
         jobOptions.loadArgs();
-        jobOptions.setDbName(getClass().getSimpleName());
-        pipelineOptions = jobOptions.getPipelineOptions();
-        variantOptions = jobOptions.getVariantOptions();
+        jobOptions.getPipelineOptions().put("output.dir.statistics", outputFolder.getRoot().getAbsolutePath());
+        dbName = name.getMethodName();
     }
 
     @After
     public void tearDown() throws Exception {
-        JobTestUtils.cleanDBs(jobOptions.getDbName());
+	JobTestUtils.cleanDBs(dbName);
     }
 
 }
