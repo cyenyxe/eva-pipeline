@@ -66,4 +66,22 @@ public class VariantNormalizerStepParametersValidatorTest {
         validator.validateInputVcfId("");
     }
 
+    @Test
+    public void inputVcfAggregationValid() throws JobParametersInvalidException {
+        validator.validateInputVcfAggregation("NONE");
+        validator.validateInputVcfAggregation("BASIC");
+        validator.validateInputVcfAggregation("EXAC");
+        validator.validateInputVcfAggregation("EVS");
+    }
+
+    @Test(expected = JobParametersInvalidException.class)
+    public void inputVcfAggregationEmpty() throws JobParametersInvalidException {
+        validator.validateInputVcfAggregation("");
+    }
+
+    @Test(expected = JobParametersInvalidException.class)
+    public void inputVcfAggregationIncorrectValue() throws JobParametersInvalidException {
+        validator.validateInputVcfAggregation("my-favourite-aggregation");
+    }
+
 }

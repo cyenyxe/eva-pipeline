@@ -25,6 +25,10 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Validates the job parameters necessary to execute a {@link uk.ac.ebi.eva.pipeline.jobs.steps.VariantNormalizerStep}
@@ -49,6 +53,7 @@ public class VariantNormalizerStepParametersValidator extends DefaultJobParamete
 
         validateInputVcf(parameters.getString(JobParametersNames.INPUT_VCF));
         validateInputVcfId(parameters.getString(JobParametersNames.INPUT_VCF_ID));
+        validateInputVcfAggregation(parameters.getString(JobParametersNames.INPUT_VCF_AGGREGATION));
         // TODO Custom validations
     }
 
@@ -83,7 +88,25 @@ public class VariantNormalizerStepParametersValidator extends DefaultJobParamete
      */
     void validateInputVcfId(String id) throws JobParametersInvalidException {
         if (id.isEmpty()) {
-            throw new JobParametersInvalidException("A unique file ID must be specified");
+            throw new JobParametersInvalidException("A  file ID must be specified");
+        }
+    }
+
+    /**
+     * Checks that the input VCF aggregation mode is NONE, BASIC, EXAC or EVS.
+     * 
+     * @param aggregation Aggregation mode for the input VCF
+     * @throws JobParametersInvalidException If the aggregation mode is empty or not one of the accepted strings
+     */
+    void validateInputVcfAggregation(String aggregation) throws JobParametersInvalidException {
+        if (aggregation.isEmpty()) {
+            throw new JobParametersInvalidException("An aggregation mode must be specified (NONE, BASIC, EXAC or EVS)");
+        }
+        
+        Set<String> acceptedValues = new HashSet<>(Arrays.asList("NONE", "BASIC", "EXAC", "EVS"));
+        if (!acceptedValues.contains(aggregation.toUpperCase())) {
+            throw new JobParametersInvalidException(
+                "The ggregation mode is not valid: must be NONE, BASIC, EXAC or EVS");
         }
     }
 }
