@@ -1,23 +1,26 @@
-sudo: false
-
 language: java
 
-jdk:
-  - oraclejdk8
-
-env:
-  - OPENCGA_HOME=$TRAVIS_BUILD_DIR/opencga/opencga-app/build MONGODB_VERSION=3.0.4
-
+matrix:
+  include:
+    - os: linux
+      sudo: false
+      jdk: oraclejdk8
+      env: OPENCGA_HOME=$TRAVIS_BUILD_DIR/opencga/opencga-app/build MONGODB_VERSION=3.0.4
+    - os: osx
+      osx_image: xcode8
+      env: OPENCGA_HOME=$TRAVIS_BUILD_DIR/opencga/opencga-app/build MONGODB_VERSION=3.0.4
 
 before_install:
-  - chmod +x install-dependencies.sh
+  - chmod +x install-linux-dependencies.sh
+  - chmod +x install-osx-dependencies.sh
+  - chmod +x install-opencb-dependencies.sh
 
 install:
-  - wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-$MONGODB_VERSION.tgz
-  - tar xfz mongodb-linux-x86_64-$MONGODB_VERSION.tgz
-  - export PATH=`pwd`/mongodb-linux-x86_64-$MONGODB_VERSION/bin:$PATH
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./install-linux-dependencies.sh ${MONGODB_VERSION} ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./install-osx-dependencies.sh ${MONGODB_VERSION} ; fi
+#  - export PATH=`pwd`/mongodb-linux-x86_64-$MONGODB_VERSION/bin:$PATH
   - mkdir -p data/db
   - mongod --dbpath=data/db &
-  - ./install-dependencies.sh
+  - ./install-opencb-dependencies.sh
   - mongod --version
 
