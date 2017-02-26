@@ -1,0 +1,26 @@
+version: '{build}'
+
+environment:
+  JAVA_HOME: C:\Program Files\Java\jdk1.8.0
+  OPENCGA_HOME: '%APPVEYOR_BUILD_FOLDER%\opencga\opencga-app\build'
+
+services:
+  - mongodb
+
+cache:
+  - C:\maven\
+  - C:\Users\appveyor\.m2
+  
+install:
+  - git clone -b hotfix/0.4 https://github.com/EBIvariation/biodata.git
+  - cd biodata
+  - mvn install -B -DskipTests
+  - cd %APPVEYOR_BUILD_FOLDER%
+
+  - git clone -b hotfix/0.5 https://github.com/EBIVariation/opencga.git
+  - cd opencga
+  - mvn install -B -DskipTests
+  - cd %APPVEYOR_BUILD_FOLDER%
+
+build_script:
+  - mvn clean install -B
