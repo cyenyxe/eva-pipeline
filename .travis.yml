@@ -8,7 +8,6 @@ jdk:
 env:
   - OPENCGA_HOME=$TRAVIS_BUILD_DIR/opencga/opencga-app/build MONGODB_VERSION=3.0.4
 
-
 before_install:
   - chmod +x install-dependencies.sh
 
@@ -20,4 +19,11 @@ install:
   - mongod --dbpath=data/db &
   - ./install-dependencies.sh
   - mongod --version
+
+script:
+  - mvn install -B
+  - mvn cobertura:cobertura
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 
